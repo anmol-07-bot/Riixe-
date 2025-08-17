@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- [Previous head content remains exactly the same] -->
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        
+        function RiixeWebsite() {
+            const [email, setEmail] = useState('');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [submitStatus, setSubmitStatus] = useState(null);
+            const [errorMessage, setErrorMessage] = useState('');
+            const [waitlistEmails, setWaitlistEmails] = useState([]);
+            const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+            const [scrollY, setScrollY] = useState(0);
+            const [isVisible, setIsVisible] = useState({});
+            const [typedText, setTypedText] = useState('');
+            const [currentWordIndex, setCurrentWordIndex] = useState(0);
+            const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+            const canvasRef = useRef(null);
+            const observerRef = useRef(null);
+
+            // [Previous useEffect hooks remain exactly the same until handleSubmit]
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                setSubmitStatus(null);
+                setErrorMessage('');
+
+                const trimmedEmail = email.trim().toLowerCase();
+                
+                if (!trimmedEmail) {
+                    setErrorMessage('Please enter your email address');
+                    return;
+                }
+
+                if (!isValidEmail(trimmedEmail)) {
+                    setErrorMessage('Please enter a valid email address');
+                    return;
+                }
+
+                if (waitlistEmails.includes(trimmedEmail)) {
+                    setSubmitStatus('success');
+                    setShowEmailConfirmation(true);
+                    return;
+                }
+
+                setIsSubmitting(true);
+
+                try {
+                    const emailSent = await sendEmailNotification(trimmedEmail);
+                    
+                    if (emailSent) {
+                        setWaitlistEmails([...waitlistEmails, trimmedEmail]);
+                        setSubmitStatus('success');
+                        setEmail('');
+                        setShowEmailConfirmation(true);
+                    } else {
+                        setSubmitStatus('error');
+                        setErrorMessage('Failed to send confirmation. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    setSubmitStatus('error');
+                    setErrorMessage('An unexpected error occurred. Please try again.');
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            const isValidEmail = (email) => {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            };
+
+            const renderMainContent = () => (
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+                    <div className="text-center">
+                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+                            Build the future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">{typedText}</span>
+                        </h1>
+                        <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
+                            Join thousands of forward-thinking creators building the next generation of digital experiences with Riixe.
+                        </p>
+                        
+                        <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    className="flex-grow px-5 py-3 rounded-lg bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-900 text-white placeholder-gray-400 transition-all"
+                                    disabled={isSubmitting}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+                                </button>
+                            </div>
+                            {errorMessage && (
+                                <p className="mt-2 text-red-400 text-sm">{errorMessage}</p>
+                            )}
+                        </form>
+
+                        {showEmailConfirmation && (
+                            <div className="mt-8 p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700 text-green-200 animate-fadeIn">
+                                <p>🎉 Thank you! We've added you to our waitlist.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const renderFeatures = () => (
+                <div className="relative z-10 py-20 bg-gray-900 bg-opacity-60 backdrop-blur-lg">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-16">
+                            Why Creators Choose Riixe
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[
+                                {
+                                    icon: '⚡',
+                                    title: 'Lightning Performance',
+                                    description: 'Our optimized architecture delivers unmatched speed and responsiveness.'
+                                },
+                                {
+                                    icon: '🔗',
+                                    title: 'Seamless Integration',
+                                    description: 'Connect with your favorite tools and services effortlessly.'
+                                },
+                                {
+                                    icon: '🛡️',
+                                    title: 'Enterprise Security',
+                                    description: 'Military-grade encryption and privacy by default.'
+                                }
+                            ].map((feature, index) => (
+                                <div 
+                                    key={index}
+                                    className="bg-gray-800 bg-opacity-50 p-6 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all"
+                                >
+                                    <div className="text-4xl mb-4">{feature.icon}</div>
+                                    <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                                    <p className="text-gray-300">{feature.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="relative overflow-hidden">
+                    {/* Animated Background Canvas */}
+                    <canvas 
+                        ref={canvasRef}
+                        className="fixed top-0 left-0 w-full h-full pointer-events-none z-0"
+                    />
+                    
+                    {/* Main Content */}
+                    <main className="relative min-h-screen flex flex-col justify-center">
+                        {renderMainContent()}
+                        {renderFeatures()}
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="relative z-10 py-8 bg-black bg-opacity-80 text-center">
+                        <p className="text-gray-400">
+                            © {new Date().getFullYear()} Riixe Technologies. All rights reserved.
+                        </p>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RiixeWebsite />);
+    </script>
+</body>
+</html>
