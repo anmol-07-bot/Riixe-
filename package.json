@@ -1,0 +1,27 @@
+{
+  "name": "educational-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A simple educational app with courses, lessons, and quizzes.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js"
+  },
+  "keywords": [
+    "education",
+    "learning",
+    "quiz",
+    "courses"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  }
+}
+
